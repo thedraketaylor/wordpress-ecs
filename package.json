@@ -1,0 +1,22 @@
+{
+  "name": "wordpress-fargate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cfn-modules/alb": "^1.0.4",
+    "@cfn-modules/alb-listener": "^1.2.0",
+    "@cfn-modules/client-sg": "^1.0.0",
+    "@cfn-modules/ecs-alb-target": "^1.4.0",
+    "@cfn-modules/ecs-cluster": "^1.1.0",
+    "@cfn-modules/efs-file-system": "^1.3.0",
+    "@cfn-modules/fargate-service": "^2.11.0",
+    "@cfn-modules/rds-mysql": "^1.3.0",
+    "@cfn-modules/vpc": "^1.3.0"
+  }
+}
