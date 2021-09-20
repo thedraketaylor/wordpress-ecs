@@ -82,6 +82,28 @@ Resources:
         AppImage: 'wordpress'
         AppPort: '80'
       TemplateURL: './node_modules/@cfn-modules/fargate-service/module.yml'
+  Database:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        VpcModule: !GetAtt 'Vpc.Outputs.StackName' # required
+        ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName' # required
+        #AlertingModule: '' # optional
+        #HostedZoneModule: '' # optional
+        # BastionModule: '' # optional
+        # KmsKeyModule: '' # optional
+        # DBSnapshotIdentifier: '' # optional
+        DBAllocatedStorage: 5 # optional
+        DBInstanceClass: 'db.t2.micro' # optional
+        DBName: 'wordpress' # optional
+        DBBackupRetentionPeriod: 30 # optional
+        DBMasterUsername: 'master' # optional
+        DBMasterUserPassword: 'Zero1979' # required if DBSnapshotIdentifier is not set
+        DBMultiAZ: false # optional
+        SubDomainNameWithDot: 'mysql.' # optional
+        EngineVersion: '5.7.25' # set this to the latest available version when launching!
+        EnableIAMDatabaseAuthentication: 'false' # optional
+      TemplateURL: './node_modules/@cfn-modules/rds-mysql/module.yml'
 Outputs:
   Url:
     Value: !Sub 'http://${Alb.Outputs.DnsName}'
