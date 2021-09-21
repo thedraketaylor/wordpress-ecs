@@ -57,25 +57,32 @@ Resources:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
       TemplateURL: './node_modules/@cfn-modules/client-sg/module.yml'
-  FileSystem:
+  RDSSg:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
-        ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName'
-        # AlertingModule: !GetAtt 'Alerting.Outputs.StackName' 
-        # KmsKeyModule: !GetAtt 'Key.Outputs.StackName' 
-        PerformanceMode: generalPurpose 
-        NumberOfAvailabilityZones: !GetAtt 'Vpc.Outputs.NumberOfAvailabilityZones'
-        BackupRetentionPeriod: '30' 
-        BackupScheduleExpression: 'cron(0 5 ? * * *)' 
-      TemplateURL: './node_modules/@cfn-modules/efs-file-system/module.yml'
+      TemplateURL: './node_modules/@cfn-modules/client-sg/module.yml'
+  # FileSystem:
+  #   Type: 'AWS::CloudFormation::Stack'
+  #   Properties:
+  #     Parameters:
+  #       VpcModule: !GetAtt 'Vpc.Outputs.StackName'
+  #       ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName'
+  #       # AlertingModule: !GetAtt 'Alerting.Outputs.StackName' 
+  #       # KmsKeyModule: !GetAtt 'Key.Outputs.StackName' 
+  #       PerformanceMode: generalPurpose 
+  #       NumberOfAvailabilityZones: !GetAtt 'Vpc.Outputs.NumberOfAvailabilityZones'
+  #       BackupRetentionPeriod: '30' 
+  #       BackupScheduleExpression: 'cron(0 5 ? * * *)' 
+  #     TemplateURL: './node_modules/@cfn-modules/efs-file-system/module.yml'
   Service:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         ClusterModule: !GetAtt 'Cluster.Outputs.StackName'
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
+        ClientSgModule1: !GetAtt 'ClientSg.Outputs.StackName'
         TargetModule: !GetAtt 'Target.Outputs.StackName'
         #AlertingModule: !GetAtt 'Alerting.Outputs.StackName'
         #FileSystemModule1: !GetAtt 'FileSystem.Outputs.StackName'
@@ -87,7 +94,7 @@ Resources:
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName' # required
-        ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName' # required
+        ClientSgModule: !GetAtt 'RDSSg.Outputs.StackName' # required
         #AlertingModule: '' # optional
         #HostedZoneModule: '' # optional
         # BastionModule: '' # optional
@@ -104,6 +111,15 @@ Resources:
         EngineVersion: '5.7.25' # set this to the latest available version when launching!
         EnableIAMDatabaseAuthentication: 'false' # optional
       TemplateURL: './node_modules/@cfn-modules/rds-mysql/module.yml'
+  # SGBaseIngress:
+  #   Type: 'AWS::EC2::SecurityGroupIngress'
+  #   Properties:
+  #       GroupId: !GetAtt 'R.Outputs.SecurityGroupId'
+  #       IpProtocol: tcp
+  #       FromPort: 3306
+  #       ToPort: 3306
+  #       SourceSecurityGroupId: !GetAtt 'Target.Outputs.SecurityGroupId'
+
 Outputs:
   Url:
     Value: !Sub 'http://${Alb.Outputs.DnsName}'
