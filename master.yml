@@ -14,6 +14,7 @@
 # limitations under the License.
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Infrastructure for running wordpress on ECS'
+
 Resources:
   Vpc:
     Type: 'AWS::CloudFormation::Stack'
@@ -25,6 +26,7 @@ Resources:
         FlowLog: 'false'
         NatGateways: 'false'
       TemplateURL: './node_modules/@cfn-modules/vpc/module.yml'
+      TimeoutInMinutes: 5
   Cluster:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -57,25 +59,19 @@ Resources:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
       TemplateURL: './node_modules/@cfn-modules/client-sg/module.yml'
-  RDSSg:
+  FileSystem:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName'
-      TemplateURL: './node_modules/@cfn-modules/client-sg/module.yml'
-  # FileSystem:
-  #   Type: 'AWS::CloudFormation::Stack'
-  #   Properties:
-  #     Parameters:
-  #       VpcModule: !GetAtt 'Vpc.Outputs.StackName'
-  #       ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName'
-  #       # AlertingModule: !GetAtt 'Alerting.Outputs.StackName' 
-  #       # KmsKeyModule: !GetAtt 'Key.Outputs.StackName' 
-  #       PerformanceMode: generalPurpose 
-  #       NumberOfAvailabilityZones: !GetAtt 'Vpc.Outputs.NumberOfAvailabilityZones'
-  #       BackupRetentionPeriod: '30' 
-  #       BackupScheduleExpression: 'cron(0 5 ? * * *)' 
-  #     TemplateURL: './node_modules/@cfn-modules/efs-file-system/module.yml'
+        ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName'
+        # AlertingModule: !GetAtt 'Alerting.Outputs.StackName' 
+        # KmsKeyModule: !GetAtt 'Key.Outputs.StackName' 
+        PerformanceMode: generalPurpose 
+        NumberOfAvailabilityZones: !GetAtt 'Vpc.Outputs.NumberOfAvailabilityZones'
+        BackupRetentionPeriod: '30' 
+        BackupScheduleExpression: 'cron(0 5 ? * * *)' 
+      TemplateURL: './node_modules/@cfn-modules/efs-file-system/module.yml'
   Service:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -85,16 +81,21 @@ Resources:
         ClientSgModule1: !GetAtt 'ClientSg.Outputs.StackName'
         TargetModule: !GetAtt 'Target.Outputs.StackName'
         #AlertingModule: !GetAtt 'Alerting.Outputs.StackName'
-        #FileSystemModule1: !GetAtt 'FileSystem.Outputs.StackName'
-        AppImage: 'wordpress'
+        FileSystemModule1: !GetAtt 'FileSystem.Outputs.StackName'
+        AppImage: 'thedraketaylor/wordpress-ecs:latest'
         AppPort: '80'
+        Cpu: 0.25
+        Memory: 0.5
+        DesiredCount: 1
+        MaxCapacity: 1
+        MinCapacity: 1
       TemplateURL: './node_modules/@cfn-modules/fargate-service/module.yml'
   Database:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       Parameters:
         VpcModule: !GetAtt 'Vpc.Outputs.StackName' # required
-        ClientSgModule: !GetAtt 'RDSSg.Outputs.StackName' # required
+        ClientSgModule: !GetAtt 'ClientSg.Outputs.StackName' # required
         #AlertingModule: '' # optional
         #HostedZoneModule: '' # optional
         # BastionModule: '' # optional
@@ -111,14 +112,6 @@ Resources:
         EngineVersion: '5.7.25' # set this to the latest available version when launching!
         EnableIAMDatabaseAuthentication: 'false' # optional
       TemplateURL: './node_modules/@cfn-modules/rds-mysql/module.yml'
-  # SGBaseIngress:
-  #   Type: 'AWS::EC2::SecurityGroupIngress'
-  #   Properties:
-  #       GroupId: !GetAtt 'R.Outputs.SecurityGroupId'
-  #       IpProtocol: tcp
-  #       FromPort: 3306
-  #       ToPort: 3306
-  #       SourceSecurityGroupId: !GetAtt 'Target.Outputs.SecurityGroupId'
 
 Outputs:
   Url:
